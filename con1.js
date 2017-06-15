@@ -1,34 +1,37 @@
-var con = (function() {
-  return {
-    init: function() {
-      clear();
-    },
-    render: function(tasks) {
-      console.log('진행');
+var Con = function() {};
 
-      var task;
+Con.prototype = new Renderer();
 
-      for (var i = 0; i < tasks.length; i++) {
-        task = tasks[i];
+Con.prototype._init = function() {
+  // clear();
+};
 
-        if (task.state === '진행') {
-          console.log(task.id + '. ' + task.title + '(' + task.state + ')' );
-        }
-      }
+Con.prototype._render = function(tasks) {
+  console.log('진행');
 
-      console.log('완료');
+  var task, i;
 
-      for (var i = 0; i < tasks.length; i++) {
-        task = tasks[i];
+  for (i = 0; i < tasks.length; i++) {
+    task = tasks[i];
 
-        if (task.state === '완료') {
-          console.log(task.id + '. ' + task.title + '(' + task.state + ')' );
-        }
-      }
-
-      console.log('추가     : addTask(할일 내용)');
-      console.log('삭제     : removeTask(아이디)');
-      console.log('상태 변경 : changeState(아이디, 상태 - 완료 또는 진행)');
+    if (task.state === STATE.PROGRESS()) {
+      console.log(task.id + '. ' + task.title + '(' + task.state + ')' );
     }
-  };
-})();
+  }
+
+  console.log('완료');
+
+  for (i = 0; i < tasks.length; i++) {
+    task = tasks[i];
+
+    if (task.state === STATE.COMPLETE()) {
+      console.log(task.id + '. ' + task.title + '(' + task.state + ')' );
+    }
+  }
+
+  console.log('추가     : addTask(할일 내용)');
+  console.log('삭제     : removeTask(아이디)');
+  console.log('상태 변경 : changeState(아이디, 상태 - 완료 또는 진행)');
+};
+
+var con = new Con();
