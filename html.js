@@ -1,74 +1,107 @@
-var Html = function() {};
+var Item = (function() {
+  var items = {};
 
-Html.prototype = new Renderer();
+  var Item = function(selector) {
+    if (items[selector]) throw '이미 존재 - item';
 
-Html.prototype._init = function() {
-  this.progressLi = document.querySelector('#todo .progress li');
-  this.completeLi = document.querySelector('#todo .complete li');
+    this._el = items[selector] = selector;
+  }, fn = Item.prototype;
 
-  this.progressLi.parentNode.removeChild(this.progressLi);
-  this.completeLi.parentNode.removeChild(this.completeLi);
+  fn.init = function() {
+    var el;
 
-  console.log('form 안의 input을 연결');
-};
+    this._el = el = document.querySelector(this._el);
 
-Html.prototype._render = function(tasks) {
-  if (typeof this.completeLi === 'undefined' || typeof this.progressLi === 'undefined') {
-    return;
-  }
+    if (el.parentNode) el.parentNode.removeChild(el);
+  };
 
-  var complete = document.querySelector('#todo .complete');
-  var progress = document.querySelector('#todo .progress');
+  fn.add = function(task) {
+    var el = this._el.cloneNode(true);
 
-  console.log('// 각 리스트를 비운다.');
-  complete.innerHTML = '';
-  progress.innerHTML = '';
+    el.querySelector('p').innerHTML = task;
 
-  console.log('// 진행을 채운다.');
-  console.log('// 완료를 채운다.');
-  var task, child, inputs;
+    var todo = this._todo;
+    var btns = el.querySelectorAll('input');
 
-  for(var i = 0; i < tasks.length; i++) {
-    task = tasks[i];
+    btns[0].onclick = function() {
+      todo.toggle(task);
+    };
 
-    if (task.state === STATE.COMPLETE()) {
-      child = this.completeLi.cloneNode(true);
-      child.querySelector('p').innerHTML = task.title;
+    btns[1].onclick = function() {
+      todo.remove(task);
+    };
 
-      inputs = child.querySelectorAll('input');
+    return el;
+  };
 
-      inputs[0].setAttribute('data-task-id', task.id);
-      inputs[0].onclick = function() {
-        this.todo.toggle(this.getAttribute('data-task-id'));
-      };
+  return Item;
+})();
 
-      inputs[1].setAttribute('data-task-id', task.id);
-      inputs[1].onclick = function() {
-        this.todo.remove(this.getAttribute('data-task-id'));
-      };
+var List = (function() {
+  var List, fn;
+  var containers = {};
 
-      complete.appendChild(child);
-    } else {
-      child = this.progressLi.cloneNode(true);
-      child.querySelector('p').innerHTML = task.title;
+  List = function(selector, item) {
+    if (containers[selector]) throw '이미 존재 - list';
 
-      inputs = child.querySelectorAll('input');
+    this._container = containers[selector] = selector;
+    this._item = item;
+  };
 
-      inputs[0].setAttribute('data-task-id', task.id);
-      inputs[0].onclick = function() {
-        this.todo.toggle(this.getAttribute('data-task-id'));
-      };
+  fn = List.prototype;
 
-      inputs[1].setAttribute('data-task-id', task.id);
-      inputs[1].onclick = function() {
-        this.todo.remove(this.getAttribute('data-task-id'));
-      };
+  fn.init = function(manager) {
+    this._container = document.querySelector(this._container);
+    this._item.init();
+  };
 
-      progress.appendChild(child);
+  fn.clear = function() {
+    this._container.innerHTML = '';
+  };
+
+  fn.add = function(task) {
+    this._container.appendChild(this._item.add(task));
+  };
+})();
+
+var ListManager = (function() {
+  var ListManager = function(add, pList, cList) {
+    this._add = add;
+    this._pList = pList;
+    this._cList = cList;
+
+    this._isInitialized = false;
+  };
+
+  var fn = ListManager.prototype = new Renderer();
+
+  fn._init = function() {
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+
+    this._add(this._todo);
+    this._add = null;
+
+    this._pList.init(this);
+    this._cList.init(this);
+  };
+
+  fn._render = function(tasks) {
+    var task;
+
+    this._pList.clear();
+    this._cList.clear();
+
+    for(var i = 0; i < tasks.length; i++) {
+      task = tasks[i];
+
+      if (task.isComplete()) {
+        this._cList.add(task);  
+      } else {
+        this._pList.add(task);  
+      }
     }
-  }
+  };
 
-  console.log('// 인풋 박스를 비운다.');
-};
-
-var html = new Html();
+  return ListManager;
+})();

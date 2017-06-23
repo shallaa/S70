@@ -1,108 +1,66 @@
-var STATE = (function() {
-  var c = { toString: function() { return 'COMPLETE'; } };
-  var p = {};
+var Task = (function() {
+  var c = {}, p = {};
 
-  return {
-    COMPLETE: function() { return c; },
-    PROGRESS: function() { return p; }
+  var Task = function(title) {
+    this._title = title;
+    this._state = p;
   };
+
+  Task.prototype.isComplete = function() {
+    return this._state === c; 
+  };
+
+  Task.prototype.toggle = function() {
+    if (this._state === c) {
+      this._state = p;
+    } else {
+      this._state = c;
+    }
+  };
+
+  Task.prototype.toString = function() {
+    return this._title;
+  };
+
+  return Task;
 })();
 
-var todo = (function() {
-  var tasks = [];
+var TaskManager = (function() {
+  var TaskManager = function() {
+    this._tasks = [];
+    this._renderer = null;
+  };
 
-  var addTask = (function() {
-    var id = 0;
+  var fn = TaskManager.prototype;
 
-    return function(title) {
-          var result = id;
+  fn._render = function() {
+    this._renderer.render(this._tasks.slice(0));
+  };
 
-          tasks.push({
-            title: title,
-            id: id++,
-            state: STATE.PROGRESS()
-          });
+  fn._checkTask = function(task) {
+    return (task instanceof Task) && this._tasks.indexOf(task) > -1; 
+  };
 
-          render();
+  fn.setRenderer = function(renderer) {
+    if (!(renderer instanceof Renderer)) return; 
+    this._renderer = renderer;
+    renderer.init(this);
+  };
 
-          return result;
-        };
-  })();
+  fn.add = function(title) {
+    this._tasks.push(new Task(title));
+    this._render();
+  };
 
-  var removeTask = function(id) {
-    var isRemoved = false;
-
-    for (var i = 0; i < tasks.length; i++) {
-      if (tasks[i].id === id) {
-        tasks.splice(i, 1);
-        isRemoved = true;
-
-        break;
-      }
-    }
-
-    if (!isRemoved) {
-      warning('removeTask: invalid id');
-    }
-
+  fn.remove = function(task) {
+    var tasks = this._tasks;
+    if (this._checkTask(task)) tasks.splice(tasks.indexOf(task), 1);
     render();
   };
-
-  var changeState = function(id, state) {
-    var ID = false, STATE, i;
-
-    for (i = 0; i < tasks.length; i++) {
-      if (tasks[i].id === id) {
-        ID = id;
-        break;
-      }
-    }
-    if (ID === false) {
-      warning('changeState: invalid id - ' + id);
-      return;
-    }
-
-    STATE = state;
-
-    for (i = 0; i < tasks.length; i++) {
-      if (tasks[i].id === ID) {
-        tasks[i].state = STATE;
-        break;
-      }
-    }
-
-    render();
+  
+  fn.toggle = function(task) {
+    if (this._checkTask(task)) task.toggle();
   };
 
-  var warning = console.log;
-  var target;
-
-  var render = function() {
-    target.render(Object.assign(tasks));
-  };
-
-  return {
-    setRenderer: function(renderer) {
-      if (!(renderer instanceof Renderer)) return; 
-      // if (typeof renderer.init !== 'function' || typeof renderer.render !== 'function') return;
-
-      target = renderer;
-      target.init(todo);
-    },
-    add: addTask,
-    remove: removeTask,
-    toggle: function(id) {
-      for (var i = 0; i < tasks.length; i++) {
-        if (tasks[i].id === id) {
-          if (tasks[i].state === STATE.PROGRESS()) {
-            changeState(id, STATE.COMPLETE());
-          } else {
-            changeState(id, STATE.PROGRESS());
-          }
-
-          break;
-        }
-      }
-    }
-  };
+  return TaskManager;
 })();

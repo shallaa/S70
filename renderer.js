@@ -1,8 +1,7 @@
 var Renderer = function() {};
 
 Renderer.prototype.init = function(todo) {
-  this.todo = todo;
-
+  this._todo = todo;
   this._init();
 };
 
@@ -11,9 +10,9 @@ Renderer.prototype.render = function(tasks) {
 };
 
 Renderer.prototype._init = function(todo) {
-
+  throw '_init 오버라이드 해야 됨.';
 };
 
 Renderer.prototype._render = function(tasks) {
-
+  throw '_render 오버라이드 해야 됨.';
 };
